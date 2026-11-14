@@ -69,21 +69,32 @@ app.use('/api', submissionRoutes);
 app.use('/api', reviewRoutes);
 app.use('/api', auditRoutes);
 
-// Static frontend serving if built
-const clientDistPath = path.join(__dirname, '../../client/dist');
+// 404 handler for API routes
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ success: false, message: `API route not found: ${req.method} ${req.originalUrl}` });
+});
+
+// Static frontend serving with SPA fallback
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
 if (fs.existsSync(clientDistPath)) {
   console.log(`[BrandGuard Server] Serving static client build from ${clientDistPath}`);
   app.use(express.static(clientDistPath));
-  app.get('*', (req, res, next) => {
-    if (req.originalUrl.startsWith('/api') || req.originalUrl.startsWith('/socket.io')) {
-      return next();
-    }
+  app.get('*', (req, res) => {
     res.sendFile(path.join(clientDistPath, 'index.html'));
   });
 } else {
-  // 404 handler for API routes
-  app.use((req, res, next) => {
-    res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
+  app.get('*', (req, res) => {
+    res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+        <head><title>BrandGuard AI</title></head>
+        <body style="font-family: sans-serif; padding: 40px; text-align: center; color: #0F172A;">
+          <h2>🛡️ BrandGuard AI API Server is Online</h2>
+          <p>Client build not found in <code>client/dist</code>. Run <code>npm run build</code> in <code>client/</code> to compile the frontend, or launch Vite on port 3000.</p>
+          <p><a href="/api/health">Check API Health Endpoint</a></p>
+        </body>
+      </html>
+    `);
   });
 }
 

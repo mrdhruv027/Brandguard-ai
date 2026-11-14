@@ -10,6 +10,7 @@ const FindingSchema = new mongoose.Schema({
   explanation: { type: String, required: true },
   suggestedCorrection: { type: String, required: true },
   confidenceScore: { type: Number, required: true },
+  engine: { type: String, default: 'Local Deterministic Rule Engine' },
   verifiedCitation: { type: Boolean, default: true },
   status: {
     type: String,

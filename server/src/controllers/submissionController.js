@@ -143,6 +143,7 @@ const runAnalysis = async (req, res) => {
         explanation: f.explanation,
         suggestedCorrection: f.suggested_correction || f.suggestedCorrection,
         confidenceScore: f.confidence_score || f.confidenceScore,
+        engine: f.engine || analysisResponse.model_used || 'Local Deterministic Rule Engine',
         verifiedCitation: f.verified_citation !== undefined ? f.verified_citation : true,
         status: f.status || 'open'
       })),

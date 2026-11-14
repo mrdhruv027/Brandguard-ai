@@ -83,6 +83,57 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* "Start Here" Quick Demo Hint for Judges / Evaluators */}
+      <div className="rounded-2xl border-2 border-orange-300 bg-gradient-to-r from-orange-50/90 via-amber-50/70 to-white p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-600 text-white font-black text-sm shadow-xs">
+              🎯
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-[#0F172A]">
+                  Start Here: Quick Evaluation Guide
+                </span>
+                <span className="rounded-full bg-orange-200/80 text-orange-950 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                  Evaluation Hint
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Test the complete 5-step BrandGuard AI governance workflow in under 2 minutes:
+              </p>
+            </div>
+          </div>
+
+          <Link
+            to="/app/submit"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F172A] px-3.5 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition-colors shadow-xs shrink-0 self-start sm:self-center"
+          >
+            <span>Begin Step 1</span>
+            <ArrowRight className="h-3 w-3 text-orange-400" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-4 pt-3 border-t border-orange-200/60 text-xs">
+          <div className="flex gap-2 items-start">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white font-bold text-[10px]">1</span>
+            <span className="text-slate-700"><strong>Submit Copy:</strong> Click <Link to="/app/submit" className="text-orange-600 underline font-medium">Check Content</Link> & load sample violating draft.</span>
+          </div>
+          <div className="flex gap-2 items-start">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white font-bold text-[10px]">2</span>
+            <span className="text-slate-700"><strong>Inspect Citations:</strong> See exact approved rule quotes & confidence scores.</span>
+          </div>
+          <div className="flex gap-2 items-start">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white font-bold text-[10px]">3</span>
+            <span className="text-slate-700"><strong>Apply Fixes:</strong> Click "Accept & Apply", then "Submit for Brand Review".</span>
+          </div>
+          <div className="flex gap-2 items-start">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white font-bold text-[10px]">4</span>
+            <span className="text-slate-700"><strong>Manager Sign-Off:</strong> Switch role to Brand Manager in top bar to approve diff.</span>
+          </div>
+        </div>
+      </div>
+
       {/* 4 Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Compliance Score */}
