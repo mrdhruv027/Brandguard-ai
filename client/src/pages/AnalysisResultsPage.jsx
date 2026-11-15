@@ -380,6 +380,38 @@ export default function AnalysisResultsPage() {
           </h2>
         </div>
 
+        {/* Guideline Needs Clarification List (Differentiator Showcase) */}
+        {analysis?.unclearGuidelines && analysis.unclearGuidelines.length > 0 && (
+          <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/60 p-5 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-amber-600" />
+                <h3 className="text-sm font-bold text-amber-950">
+                  Guidelines Requiring Clarification ({analysis.unclearGuidelines.length} identified)
+                </h3>
+              </div>
+              <span className="text-[10px] font-bold text-amber-900 bg-amber-200/80 px-2.5 py-0.5 rounded-full border border-amber-300">
+                AI Ambiguity Flag
+              </span>
+            </div>
+            <p className="text-xs text-amber-800 leading-relaxed">
+              BrandGuard AI identified the following approved guidelines as vague or subjective. We recommend compliance admins clarify these rules with concrete criteria:
+            </p>
+            <div className="space-y-2">
+              {analysis.unclearGuidelines.map((ug, idx) => (
+                <div key={idx} className="p-3 bg-white rounded-xl border border-amber-200 text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-orange-950">{ug.ruleId || ug.rule_id}</span>
+                    <span className="text-[10px] rounded bg-slate-100 text-slate-600 px-1.5 py-0.5">{ug.category}</span>
+                  </div>
+                  <div className="text-slate-800 font-medium">Issue: {ug.issue}</div>
+                  <div className="text-slate-600 text-[11px]">Recommendation: {ug.recommendation}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {findings.length === 0 ? (
           <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-6 text-center text-emerald-900">
             <CheckCircle2 className="h-8 w-8 text-emerald-600 mx-auto mb-2" />
@@ -437,9 +469,23 @@ export default function AnalysisResultsPage() {
                         </span>
                       )}
                       <span className="text-xs text-slate-400">
-                        Confidence: {Math.round(f.confidenceScore * 100)}%
+                        Confidence: {Math.round((f.confidenceScore || 0.9) * 100)}%
                       </span>
+                      {(f.confidenceScore < 0.85 || f.status === 'flagged_for_review') && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs">
+                          <AlertTriangle className="h-3 w-3 text-amber-600 shrink-0" />
+                          <span>Low confidence, needs human review</span>
+                        </span>
+                      )}
                     </div>
+                  </div>
+
+                  {/* Engine Tag Bar */}
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80 flex items-center gap-1 font-mono">
+                      <Sparkles className="h-3 w-3 text-orange-500" />
+                      <span>Engine: {f.engine || analysis?.modelUsed || 'Local Deterministic Rule Engine'}</span>
+                    </span>
                   </div>
 
                   {/* Flagged Passage & Explanation */}

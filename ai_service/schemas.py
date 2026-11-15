@@ -37,6 +37,7 @@ class ViolationFinding(BaseModel):
     explanation: str = Field(..., description="Explanation of why this content violates the rule")
     suggested_correction: str = Field(..., description="Proposed on-brand alternative")
     confidence_score: float = Field(..., ge=0.0, le=1.0)
+    engine: Optional[str] = Field("Local Deterministic Rule Engine", description="AI/RAG Engine that detected this finding")
     verified_citation: bool = Field(True, description="True if verified against retrieved approved rules")
     status: str = Field("open", description="open | accepted | ignored | flagged_for_review")
     ignore_reason: Optional[str] = None

@@ -8,6 +8,7 @@ from schemas import Rule, ViolationFinding, AnalysisResultResponse
 
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 OPENAI_KEY = os.environ.get("OPENAI_API_KEY")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
 
 def retrieve_relevant_rules(content: str, rules: List[Rule], top_k: int = 25) -> List[Rule]:
     """
@@ -38,7 +39,7 @@ def retrieve_relevant_rules(content: str, rules: List[Rule], top_k: int = 25) ->
         score += len(overlap) * 0.8
 
         # 3. Specific checks
-        if rule.category in ["Prohibited claims", "Terminology", "Formatting"]:
+        if rule.category in ["Prohibited claims", "Terminology", "Formatting", "Visual identity"]:
             score += 2.0
 
         scored_rules.append((score, rule))
@@ -83,26 +84,32 @@ def local_deterministic_analysis(
 ) -> Tuple[List[ViolationFinding], List[Dict[str, Any]]]:
     """
     High-precision deterministic rule-based analysis engine.
-    Ensures accurate detection of brand violations without false positives on compliant content.
+    Ensures accurate detection of brand violations with exact citations and engine attribution.
     """
     findings: List[ViolationFinding] = []
     unclear: List[Dict[str, Any]] = []
 
     content_lower = content.lower()
+    ENGINE_LABEL = "Local Deterministic Rule Engine"
 
     for rule in rules:
         rule_lower = rule.rule_text.lower()
 
+        # Check for ambiguous / unclear guidelines
+        if any(w in rule_lower for w in ["generally", "appropriate depending", "case-by-case", "subject to discretion", "unclear criteria"]):
+            unclear.append({
+                "rule_id": rule.rule_id,
+                "category": rule.category,
+                "issue": f"Ambiguous wording in guideline: '{rule.rule_text[:120]}...'",
+                "recommendation": "Provide definitive, objective rules rather than subjective conditional guidance."
+            })
+
         # 1. Prohibited claims
         if rule.category == "Prohibited claims":
-            # Extract phrases marked prohibited e.g. after 'never claim', 'such as', or quoted
             prohibited_candidates = []
-            
-            # Find quoted phrases in the rule that follow words like 'claim', 'guarantees', 'such as'
             quoted = re.findall(r'[\'"]([^\'"]+)[\'"]', rule.rule_text)
             for q in quoted:
                 q_lower = q.lower().strip()
-                # Skip if it is the brand name itself
                 if q_lower not in ["brandguard ai", "innovexa"]:
                     prohibited_candidates.append(q_lower)
 
@@ -124,16 +131,14 @@ def local_deterministic_analysis(
                         explanation=f"Content contains prohibited claim '{flagged}' which violates corporate governance standards.",
                         suggested_correction="engineered for 99.9% uptime and enterprise-grade reliability",
                         confidence_score=0.98,
+                        engine=ENGINE_LABEL,
                         verified_citation=True
                     ))
 
         # 2. Terminology & Product Naming
         elif rule.category == "Terminology":
-            # Check for incorrect spelling of BrandGuard AI
             if "brandguard ai" in rule_lower:
-                # If content mentions brandguard in lowercase or improper case
-                # e.g., 'brandguard' without 'AI' or lowercase 'brandguard'
-                improper_matches = list(re.finditer(r'\b(brandguard|Brandguard)(?:\s+(?!AI\b)[a-zA-Z]+)?\b', content))
+                improper_matches = list(re.finditer(r'\b(brandguard|Brandguard|Brand\s+Guard)(?:\s+(?!AI\b)[a-zA-Z]+)?\b', content))
                 for m in improper_matches:
                     flagged = m.group(0).strip()
                     if flagged != "BrandGuard AI":
@@ -144,9 +149,10 @@ def local_deterministic_analysis(
                             severity="Medium",
                             rule_id=rule.rule_id,
                             supporting_quotation=rule.rule_text,
-                            explanation=f"Improper product capitalization for '{flagged}'. Official trademark spelling is 'BrandGuard AI'.",
+                            explanation=f"Improper product capitalization or spelling for '{flagged}'. Official trademark spelling is 'BrandGuard AI'.",
                             suggested_correction="BrandGuard AI",
                             confidence_score=0.96,
+                            engine=ENGINE_LABEL,
                             verified_citation=True
                         ))
 
@@ -167,12 +173,12 @@ def local_deterministic_analysis(
                         explanation=f"Aggressive sales slang '{flagged}' conflicts with the approved professional brand voice.",
                         suggested_correction="cost-effective",
                         confidence_score=0.93,
+                        engine=ENGINE_LABEL,
                         verified_citation=True
                     ))
 
         # 4. Approved facts
         elif rule.category == "Approved facts":
-            # Check if content has unapproved metric e.g. 9,000 teams when rule specifies 450+
             if "450+" in rule.rule_text:
                 unverified_team_matches = re.finditer(r'\b(\d+(?:,\d+)?(?:\+)?\s*(?:teams|customers|clients))\b', content, re.IGNORECASE)
                 for utm in unverified_team_matches:
@@ -188,6 +194,7 @@ def local_deterministic_analysis(
                             explanation=f"Unverified customer metric '{flagged}' detected. Approved audited metric is 'over 450+ enterprise compliance teams'.",
                             suggested_correction="over 450+ enterprise compliance teams",
                             confidence_score=0.91,
+                            engine=ENGINE_LABEL,
                             verified_citation=True
                         ))
 
@@ -206,9 +213,52 @@ def local_deterministic_analysis(
                         supporting_quotation=rule.rule_text,
                         explanation="Punctuation violation: Double exclamation marks (!!) are forbidden in official headlines and copy.",
                         suggested_correction=flagged.replace("!!", "."),
-                        confidence_score=0.95,
+                        confidence_score=0.82,  # Low confidence example
+                        engine=ENGINE_LABEL,
                         verified_citation=True
                     ))
+
+        # 6. Visual identity (Logo and Color checks)
+        elif rule.category == "Visual identity":
+            # Color checks
+            unapproved_colors = ["neon green", "neon red", "hot pink", "bright yellow"]
+            for col in unapproved_colors:
+                if col in content_lower:
+                    idx = content_lower.find(col)
+                    flagged = content[idx:idx + len(col)]
+                    findings.append(ViolationFinding(
+                        finding_id=f"FIND-{uuid.uuid4().hex[:8].upper()}",
+                        flagged_text=flagged,
+                        category="Visual identity",
+                        severity="Medium",
+                        rule_id=rule.rule_id,
+                        supporting_quotation=rule.rule_text,
+                        explanation=f"Unapproved brand color reference '{flagged}'. Primary palette requires Deep Navy (#0F172A) and Electric Orange (#F97316).",
+                        suggested_correction="Electric Orange (#F97316)",
+                        confidence_score=0.90,
+                        engine=ENGINE_LABEL,
+                        verified_citation=True
+                    ))
+            
+            # Logo distortion checks
+            if any(term in content_lower for term in ["distorted logo", "stretched logo", "recolored emblem"]):
+                for term in ["distorted logo", "stretched logo", "recolored emblem"]:
+                    if term in content_lower:
+                        idx = content_lower.find(term)
+                        flagged = content[idx:idx + len(term)]
+                        findings.append(ViolationFinding(
+                            finding_id=f"FIND-{uuid.uuid4().hex[:8].upper()}",
+                            flagged_text=flagged,
+                            category="Visual identity",
+                            severity="High",
+                            rule_id=rule.rule_id,
+                            supporting_quotation=rule.rule_text,
+                            explanation="Logo modification violation: Brand emblem must never be stretched, recolored, or modified.",
+                            suggested_correction="Use approved vector BrandGuard AI shield emblem with 24px padding",
+                            confidence_score=0.95,
+                            engine=ENGINE_LABEL,
+                            verified_citation=True
+                        ))
 
     # Deduplicate findings on same flagged text and rule_id
     deduped = []
@@ -232,7 +282,82 @@ def run_llm_rag_analysis(
     if not GEMINI_KEY and not OPENAI_KEY:
         return local_deterministic_analysis(content, retrieved_rules, content_type)
 
-    # Use deterministic analysis as first ground truth, augment with LLM if key present
+    if GEMINI_KEY:
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=GEMINI_KEY)
+            model = genai.GenerativeModel(
+                model_name=GEMINI_MODEL,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            rules_context = [
+                {
+                    "rule_id": r.rule_id,
+                    "category": r.category,
+                    "rule_text": r.rule_text,
+                    "source_doc": r.source_doc,
+                    "page_number": r.page_number
+                }
+                for r in retrieved_rules
+            ]
+
+            prompt = f"""You are BrandGuard AI, an intelligent brand governance engine.
+Analyze the following content against the provided rules.
+Ground all findings in the provided rules. Return valid JSON matching the schema.
+
+SCHEMA:
+{{
+  "findings": [
+    {{
+      "flagged_text": "...",
+      "category": "Brand tone | Terminology | Messaging | Approved facts | Prohibited claims | Formatting | Visual identity",
+      "severity": "High | Medium | Low",
+      "rule_id": "EXACT_RULE_ID",
+      "supporting_quotation": "exact quote from rule text",
+      "explanation": "...",
+      "suggested_correction": "...",
+      "confidence_score": 0.95
+    }}
+  ],
+  "unclear_guidelines": [
+    {{
+      "rule_id": "...",
+      "category": "...",
+      "issue": "...",
+      "recommendation": "..."
+    }}
+  ]
+}}
+
+Content:
+{content}
+
+Rules:
+{json.dumps(rules_context)}
+"""
+            response = model.generate_content(prompt)
+            data = json.loads(response.text)
+            
+            findings = []
+            for rf in data.get("findings", []):
+                findings.append(ViolationFinding(
+                    finding_id=f"FIND-{uuid.uuid4().hex[:8].upper()}",
+                    flagged_text=rf.get("flagged_text", ""),
+                    category=rf.get("category", "Messaging"),
+                    severity=rf.get("severity", "Medium"),
+                    rule_id=rf.get("rule_id", ""),
+                    supporting_quotation=rf.get("supporting_quotation", ""),
+                    explanation=rf.get("explanation", ""),
+                    suggested_correction=rf.get("suggested_correction", ""),
+                    confidence_score=float(rf.get("confidence_score", 0.9)),
+                    engine=f"Gemini LLM ({GEMINI_MODEL})",
+                    verified_citation=True
+                ))
+            return findings, data.get("unclear_guidelines", [])
+        except Exception as e:
+            print(f"[LLM] Gemini call failed ({e}). Falling back to deterministic engine.")
+            return local_deterministic_analysis(content, retrieved_rules, content_type)
+
     return local_deterministic_analysis(content, retrieved_rules, content_type)
 
 def analyze_content_end_to_end(
@@ -295,7 +420,7 @@ def analyze_content_end_to_end(
         status = "Issues Found"
         summary = f"Detected {total_issues} brand inconsistency issues. Review suggested corrections to align with brand standards."
 
-    model_name = "Gemini 1.5 Flash (RAG Grounded)" if GEMINI_KEY else "Local Deterministic Rule Engine (Offline Verified)"
+    model_name = f"Gemini ({GEMINI_MODEL})" if GEMINI_KEY else "Local Deterministic Rule Engine (Offline Verified)"
 
     return AnalysisResultResponse(
         compliance_score=compliance_score,

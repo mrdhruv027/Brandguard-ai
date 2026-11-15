@@ -170,14 +170,46 @@ const inMemory = {
       id: 'rule-007',
       ruleId: 'RULE-VIS-007',
       category: 'Visual identity',
-      ruleText: "Approved primary brand colors are Deep Navy (#0F172A) and Electric Orange (#F97316). Background surfaces should remain clean white or soft slate (#F8FAFC).",
-      explanation: "Design palette specifications (Page 8). Maintains enterprise aesthetic.",
+      ruleText: "Official Brand Colors: Approved primary brand colors are Deep Navy (#0F172A) and Electric Orange (#F97316). Background surfaces must remain clean white (#FFFFFF) or Soft Slate (#F8FAFC). Never use neon or unapproved accent colors.",
+      explanation: "Design palette specifications from Brand_Governance_Manual_2026.pdf (Page 8). Maintains enterprise aesthetic.",
       sourceDoc: 'Brand_Governance_Manual_2026.pdf',
       pageNumber: 8,
       guidelineId: 'gl-001',
       organizationId: 'org-innovexa-001',
       status: 'approved',
-      keywords: ['color', 'hex', 'deep navy', 'electric orange', 'visual', 'palette'],
+      keywords: ['color', 'hex', 'deep navy', 'electric orange', 'visual', 'palette', 'neon'],
+      createdBy: 'usr-admin-03',
+      createdAt: new Date('2026-01-15')
+    },
+    {
+      _id: 'rule-008',
+      id: 'rule-008',
+      ruleId: 'RULE-VIS-008',
+      category: 'Visual identity',
+      ruleText: "Official Brand Logo: The BrandGuard AI logo consists of the dual-tone shield emblem with orange accent. The logo must never be distorted, stretched, recolored, tilted, or placed on busy backgrounds with less than 24px of clear padding.",
+      explanation: "Trademark logo integrity standards from Brand_Governance_Manual_2026.pdf (Page 9).",
+      sourceDoc: 'Brand_Governance_Manual_2026.pdf',
+      pageNumber: 9,
+      guidelineId: 'gl-001',
+      organizationId: 'org-innovexa-001',
+      status: 'approved',
+      keywords: ['logo', 'shield', 'emblem', 'padding', 'distorted', 'stretched'],
+      createdBy: 'usr-admin-03',
+      createdAt: new Date('2026-01-15')
+    },
+    {
+      _id: 'rule-009',
+      id: 'rule-009',
+      ruleId: 'RULE-MESG-009',
+      category: 'Messaging',
+      ruleText: "Brand messaging regarding software performance should generally feel appropriate depending on audience segment and campaign context.",
+      explanation: "Marketing flexibility note (Page 10). Marked as ambiguous by BrandGuard AI compliance auditor.",
+      sourceDoc: 'Brand_Governance_Manual_2026.pdf',
+      pageNumber: 10,
+      guidelineId: 'gl-001',
+      organizationId: 'org-innovexa-001',
+      status: 'approved',
+      keywords: ['generally', 'appropriate', 'performance', 'audience', 'messaging'],
       createdBy: 'usr-admin-03',
       createdAt: new Date('2026-01-15')
     }
@@ -257,6 +289,7 @@ const initialAnalysis = {
       explanation: "Improper product naming capitalization detected. Official trademark spelling is 'BrandGuard AI'.",
       suggestedCorrection: 'BrandGuard AI',
       confidenceScore: 0.95,
+      engine: 'Local Deterministic Rule Engine',
       verifiedCitation: true,
       status: 'open'
     },
@@ -270,6 +303,7 @@ const initialAnalysis = {
       explanation: "Contains absolute guarantee '100% bug-free' which violates regulatory guidelines and enterprise risk policy.",
       suggestedCorrection: 'engineered for 99.9% uptime and enterprise-grade reliability',
       confidenceScore: 0.98,
+      engine: 'Local Deterministic Rule Engine',
       verifiedCitation: true,
       status: 'open'
     },
@@ -283,6 +317,7 @@ const initialAnalysis = {
       explanation: "Tone deviation: 'dirt cheap' is unapproved aggressive sales slang.",
       suggestedCorrection: 'highly cost-effective',
       confidenceScore: 0.92,
+      engine: 'Local Deterministic Rule Engine',
       verifiedCitation: true,
       status: 'open'
     },
@@ -296,11 +331,33 @@ const initialAnalysis = {
       explanation: "Unverified statistic '9,000 teams' contradicts verified company metric of '450+ enterprise compliance teams'.",
       suggestedCorrection: 'trusted by over 450+ enterprise compliance teams worldwide',
       confidenceScore: 0.90,
+      engine: 'Local Deterministic Rule Engine',
+      verifiedCitation: true,
+      status: 'open'
+    },
+    {
+      findingId: 'FIND-DEMO-05',
+      flaggedText: 'already!!',
+      category: 'Formatting',
+      severity: 'Low',
+      ruleId: 'RULE-FORM-006',
+      supportingQuotation: "All social media and ad headlines must use Title Case capitalization and never terminate with double exclamation marks (!!).",
+      explanation: "Double exclamation mark (!!) violates editorial style standard. Marginal context score.",
+      suggestedCorrection: 'already.',
+      confidenceScore: 0.74,
+      engine: 'Local Deterministic Rule Engine',
       verifiedCitation: true,
       status: 'open'
     }
   ],
-  unclearGuidelines: [],
+  unclearGuidelines: [
+    {
+      ruleId: 'RULE-MESG-009',
+      category: 'Messaging',
+      issue: "Subjective guideline phrasing ('should generally feel appropriate depending on audience segment') lacks concrete compliance criteria.",
+      recommendation: 'Replace subjective terminology with specific approved messaging claims and demographic guidelines.'
+    }
+  ],
   retrievedRulesCount: 7,
   modelUsed: 'Local Deterministic Rule Engine (Offline Verified)',
   organizationId: 'org-innovexa-001',

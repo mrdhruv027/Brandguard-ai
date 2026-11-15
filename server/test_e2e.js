@@ -202,8 +202,26 @@ SECTION 4: APPROVED FACTS & INSTITUTIONAL METRICS
     if (!actions.includes('suggestion_applied')) throw new Error('Missing suggestion_applied in audit log');
     if (!actions.includes('content_approved')) throw new Error('Missing content_approved in audit log');
 
+    // 12. Verify SPA Fallback and API 404 handling
+    console.log('\n--> Step 12: Verify SPA Fallback and API 404 Routing');
+    const spaRes = await fetch(`http://127.0.0.1:${TEST_PORT}/app/queue`);
+    const spaText = await spaRes.text();
+    console.log(`SPA Route Status: ${spaRes.status}, Content-Type: ${spaRes.headers.get('content-type')}`);
+    if (spaRes.status !== 200 || !spaText.toLowerCase().includes('html')) {
+      throw new Error('SPA Fallback failed to return index.html for client route');
+    }
+    console.log(' SPA fallback successfully served React HTML bundle.');
+
+    const notFoundRes = await fetch(`http://127.0.0.1:${TEST_PORT}/api/nonexistent-route-check`);
+    const notFoundJson = await notFoundRes.json();
+    console.log(`API 404 Status: ${notFoundRes.status}, Message: "${notFoundJson.message}"`);
+    if (notFoundRes.status !== 404 || notFoundJson.success !== false) {
+      throw new Error('API 404 handler failed to return JSON 404');
+    }
+    console.log(' API 404 handler correctly returned JSON error.');
+
     console.log('\n====================================================');
-    console.log('   ALL 11 END-TO-END INTEGRATION TESTS PASSED!');
+    console.log('   ALL 12 END-TO-END INTEGRATION TESTS PASSED!');
     console.log('====================================================');
     process.exit(0);
 
