@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: brandguard-ai
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: AI_PORT
+        value: 8000
+      - key: AI_SERVICE_URL
+        value: http://127.0.0.1:8000
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
